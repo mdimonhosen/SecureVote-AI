@@ -1,0 +1,79 @@
+Android Voting System Using Face Recognition
+
+1)	Background/ Problem Statement
+
+With the conceptualization of e-Voting, the voting process will be revolutionized. To date, voting has been conducted either manually through ballot papers or using electronic voting machines (EVMs) that are based on Direct Response Electronic (DRE) or Identical Ballot Boxes. For multinational companies and organizations, a more digitalized and convenient method of voting has been in demand. 
+In order to overcome the weaknesses of the traditional voting system, we have designed the Android Voting System Using Face Recognition. The proposed system will definitely protect the identity and credentials of the voters and it also encourages everyone to vote for their favourite candidate. This system will also increase the number of votes and give better and more accurate results compared to the traditional voting system. Private voting polls can also be created. For face recognition, we will be using Microsoft Cognitive Services Face API. The Azure Face service provides AI algorithms that detect, recognize, and analyze human faces in images. Its features include face detection that perceives facial features and attributes in an image, and identification of a person by matching to your private repository or via photo ID.     
+
+2)	Working of the Project
+
+The project comprises 2 modules: Admin and User. The admin can log in using their credentials. They can approve or disapprove user accounts. They can view the list of users and their details. They will have the access to create a poll. The candidates can be anyone from the list of users or can be anyone who is not using the system. The admin can add a private poll where access can be granted to selected users by generating a code and emailing it to them. They can view all, the current, upcoming and expired lists of polls. They can check out the people who voted and whom they voted. They can view the candidate scoring.
+
+The user would need to register first to log in. They can update and manage their profile. On Home, they can check out the list of current polls and candidates. They can also check the last date to vote. On Poll List, they can view the list of current polls which are open. If they have voted, they can’t vote again but can see their voted party/candidate. They can also view the list of all the polls which are completed. They can check the winner of that poll and the score of all the candidates/parties. If the poll is private, the user will require to enter the security code to see the poll details and cast a vote. When they will cast the vote, face authentication will be done.
+
+
+3)	Advantages
+•	The system is easy to maintain.
+•	It is easy to use.
+•	The user can vote from the comfort of their home.
+•	It ensures the authenticity of votes and voters with the use of mechanisms such as facial recognition.
+•	Private polls can be conducted.
+
+
+
+4)	System Description
+
+The system comprises 2 major modules with their sub-modules as follows:
+	Admin:
+•	Login: 
+­	The admin will have to login into the system.
+•	Manage User:
+•	Pending:
+­	The admin can approve or disapprove profiles which are newly created.          
+•	All:
+­	They can view all the user listings and details.                
+•	Manage Poll:
+­	They can add, update and delete a poll.
+­	Candidates can be from the user list or a person not registered from this app. 
+­	They can also add a poll as private which can be accessed only by selected users, where a security code is generated and an email is sent to them.
+•	View Poll:
+­	Current: They can view the list of the polls that are currently going on.
+­	Upcoming: They can view the list of the polls that will start in the coming days.
+­	Expired: They can view the list of polls that are completed.
+­	They can view the candidate scoring.
+­	They can view the list of voters and candidates they voted for.
+	User:
+•	Register:
+­	The user would need to register first to log in.
+•	Login:
+­	Initial login will be done with email & password until the profile is not approved. Biometric Authentication will be used to unlock the app. 
+•	Profile:
+­	They can view their profile and update the details.
+•	Home:
+­	They can check out the list of ongoing current polls, the list of candidates and the last day to vote.
+•	Poll list 
+•	Current: They can view the list of current polls that are open. If they have voted already, they will not be allowed to vote again but they can see their voted party/candidate.
+•	Expired: They can view the list of all the polls that are completed. They can check the winner of that poll and the score of all the candidates/parties.
+•	If the poll is private, the user will need to enter the security code to see the poll details and cast a vote.
+•	When they will cast the vote, face authentication will be done.
+
+
+
+
+5)	Project Life Cycle
+
+	The waterfall model is a classical model used in the system development life cycle to create a system with a linear and sequential approach. It is termed a waterfall because the model develops systematically from one phase to another in a downward fashion. The waterfall approach does not define the process to go back to the previous phase to handle changes in requirements. The waterfall approach is the earliest approach that was used for software development.
+
+ 
+1.	Requierments
+2.	Analusis
+3.	Design
+4.	Coding
+5.	Testing
+6.	Implementation
+
+
+6)	Application 
+
+•	Our Android Voting System Using Face Recognition will allow users to cast vote on any poll created by the admin. It can be used in universities and organizations. 
+
