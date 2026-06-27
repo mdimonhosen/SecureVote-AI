@@ -3,11 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserModel {
   final String id;
-  final String fullName; // <-- ADDED: Matches what your UI screens are looking for
+  final String fullName; 
   final String email;
   final String role;
   final String status;
   final bool faceRegistered;
+  final List<double>? faceEmbedding; // <-- ADDED THIS
 
   UserModel({
     required this.id,
@@ -16,17 +17,21 @@ class UserModel {
     required this.role,
     required this.status,
     required this.faceRegistered,
+    this.faceEmbedding, // <-- ADDED THIS
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'],
-      // We map the SQL 'display_name' directly to Flutter's 'fullName'
       fullName: json['display_name'] ?? 'Unknown User', 
       email: json['email'] ?? '',
       role: json['role'] ?? 'user',
       status: json['status'] ?? 'pending',
       faceRegistered: json['face_registered'] ?? false,
+      // <-- ADDED PARSER FOR FACE DATA
+      faceEmbedding: json['face_embedding'] != null 
+          ? List<double>.from(json['face_embedding'] as List<dynamic>) 
+          : null,
     );
   }
 }

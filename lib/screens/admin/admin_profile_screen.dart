@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
+import '../../../main.dart' show AuthWrapper;
 
 class AdminProfileScreen extends StatefulWidget {
   const AdminProfileScreen({super.key});
@@ -104,6 +105,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             onPressed: () async {
+              // Cache messenger before await to avoid linter warnings
               final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(dialogContext);
               
@@ -119,7 +121,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                 messenger.showSnackBar(const SnackBar(content: Text('Profile updated!'), backgroundColor: AppColors.success));
               } catch (e) {
                 messenger.showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error));
-                setState(() => _isLoading = false);
+                if (mounted) setState(() => _isLoading = false);
               } 
             },
             child: const Text('Save', style: TextStyle(color: Colors.white)),
@@ -189,10 +191,10 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
     final authProvider = Provider.of<AuthStateProvider>(context, listen: false);
 
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: const Color.fromARGB(255, 66, 74, 175),
       appBar: AppBar(
-        title: const Text('Admin Profile', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
+        title: const Text('Admin Profile', style: TextStyle(color: Color.from(alpha: 0.062, red: 0.506, green: 0.686, blue: 0.216), fontWeight: FontWeight.bold)),
+        backgroundColor: const Color.fromARGB(0, 197, 211, 74),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
@@ -296,7 +298,7 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                 ),
                 const SizedBox(height: 40),
 
-                // LOGOUT BUTTON
+                // LOGOUT BUTTON - FIXED TO SATISFY LINTER
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -308,7 +310,17 @@ class _AdminProfileScreenState extends State<AdminProfileScreen> {
                     ),
                     icon: const Icon(Icons.logout),
                     label: const Text('Secure Logout', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    onPressed: () => authProvider.logout(),
+                    onPressed: () async {
+                      await authProvider.logout();
+                      
+                      // FIXED: Using context.mounted instead of just mounted!
+                      if (!context.mounted) return; 
+                      
+                      Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(builder: (_) => const AuthWrapper()),
+                        (route) => false,
+                      );
+                    },
                   ),
                 ),
               ],
@@ -362,6 +374,7 @@ class _ManageAdminsScreenState extends State<ManageAdminsScreen> {
     if (email.isEmpty) return;
 
     setState(() => _isLoading = true);
+    // Cache the messenger before the await
     final messenger = ScaffoldMessenger.of(context);
     
     try {
@@ -389,8 +402,10 @@ class _ManageAdminsScreenState extends State<ManageAdminsScreen> {
       return;
     }
 
+    // Cache the messenger before the await
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _isLoading = true);
+    
     try {
       await _supabase.from('users').update({'role': 'user'}).eq('id', id);
       await _fetchAdmins();

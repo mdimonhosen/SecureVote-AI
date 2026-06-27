@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/services/supabase_service.dart';
 
 class ManageUsersScreen extends StatefulWidget {
   const ManageUsersScreen({super.key});
@@ -46,6 +47,13 @@ class _ManageUsersScreenState extends State<ManageUsersScreen> {
   Future<void> _updateUserStatus(String userId, String status) async {
     try {
       await _supabase.from('users').update({'status': status}).eq('id', userId);
+      
+      // NEW: Blueprint 11.8 - Audit Logging addition
+      await SupabaseService().logAdminAction(
+        'USER_STATUS_CHANGE', 
+        'Changed user ($userId) status to: $status'
+      );
+
       _fetchUsers(); // Refresh the list
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('User marked as $status'), backgroundColor: AppColors.success));

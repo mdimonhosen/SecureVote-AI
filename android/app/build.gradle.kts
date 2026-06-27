@@ -18,16 +18,14 @@ android {
         jvmTarget = "17"
     }
 
-    defaultConfig {
-        applicationId = "com.example.secure_vote"
-        
-        // KOTLIN FIX: Requires "minSdk =" instead of "minSdkVersion"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
-    }
+   defaultConfig {
+    applicationId = "com.example.secure_vote"
+    minSdk = flutter.minSdkVersion
+    targetSdk = flutter.targetSdkVersion
+    versionCode = flutter.versionCode
+    versionName = flutter.versionName
 
+}
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")

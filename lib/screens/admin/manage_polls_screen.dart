@@ -57,6 +57,53 @@ class _ManagePollsScreenState extends State<ManagePollsScreen> with SingleTicker
     }
   }
 
+  Future<void> _editPollDialog(PollModel poll) async {
+    final titleController = TextEditingController(text: poll.title);
+    final descController = TextEditingController(text: poll.description);
+    
+    await showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Edit Upcoming Poll'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(controller: titleController, decoration: const InputDecoration(labelText: 'Title', border: OutlineInputBorder())),
+            const SizedBox(height: 12),
+            TextField(controller: descController, maxLines: 3, decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder())),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              try {
+                await Supabase.instance.client.from('polls').update({
+                  'title': titleController.text.trim(),
+                  'description': descController.text.trim(),
+                }).eq('id', poll.id);
+                
+                // FIX: Check mounted before using context after async gap
+                if (!mounted) return;
+                
+                Provider.of<PollProvider>(context, listen: false).fetchAllPolls();
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Poll updated!'), backgroundColor: AppColors.success));
+              } catch (e) {
+                // FIX: Check mounted before using context after async gap
+                if (!mounted) return;
+                
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error));
+              }
+            },
+            child: const Text('Save Changes', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showResultsDialog(PollModel poll) {
     final candidates = Provider.of<PollProvider>(context, listen: false).getCandidatesForPoll(poll.id);
     final totalVotes = candidates.fold(0, (sum, c) => sum + c.voteCount);
@@ -173,8 +220,6 @@ class _ManagePollsScreenState extends State<ManagePollsScreen> with SingleTicker
   @override
   Widget build(BuildContext context) {
     final pollProvider = Provider.of<PollProvider>(context);
-    
-    // LIVE FILTERING LOGIC: This guarantees the tabs are 100% accurate based on the exact current time
     final now = DateTime.now();
     final allPolls = pollProvider.polls;
     
@@ -232,7 +277,6 @@ class _ManagePollsScreenState extends State<ManagePollsScreen> with SingleTicker
         final dateFormat = DateFormat('MMM dd, yyyy');
         final candidates = Provider.of<PollProvider>(context).getCandidatesForPoll(poll.id);
 
-        // Determine Poll Status for the Badge
         String statusText;
         Color statusColor;
         Color statusBgColor;
@@ -256,10 +300,7 @@ class _ManagePollsScreenState extends State<ManagePollsScreen> with SingleTicker
           child: Container(
             margin: const EdgeInsets.only(bottom: 16),
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(12),
-            ),
+            decoration: BoxDecoration(color: AppColors.primaryLight, borderRadius: BorderRadius.circular(12)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -267,39 +308,25 @@ class _ManagePollsScreenState extends State<ManagePollsScreen> with SingleTicker
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(child: Text(poll.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
-                    
-                    // NEW: Dynamic Status Badge
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: statusBgColor,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        statusText,
-                        style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold),
-                      ),
+                      decoration: BoxDecoration(color: statusBgColor, borderRadius: BorderRadius.circular(8)),
+                      child: Text(statusText, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(poll.description, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                
-                // Show Private Access Code if it exists
                 if (poll.isPrivate) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       const Icon(Icons.lock, size: 14, color: Colors.orange),
                       const SizedBox(width: 4),
-                      Text(
-                        'Code: ${poll.accessCode ?? "N/A"}',
-                        style: TextStyle(color: Colors.orange.shade900, fontSize: 12, fontWeight: FontWeight.bold),
-                      ),
+                      Text('Code: ${poll.accessCode ?? "N/A"}', style: TextStyle(color: Colors.orange.shade900, fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
-
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -319,11 +346,23 @@ class _ManagePollsScreenState extends State<ManagePollsScreen> with SingleTicker
                         Text('${candidates.length} candidates', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600)),
                       ],
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () => _deletePoll(poll.id),
+                    Row(
+                      children: [
+                        if (statusText == 'UPCOMING')
+                          IconButton(
+                            icon: const Icon(Icons.edit_note, color: Colors.blue),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => _editPollDialog(poll),
+                          ),
+                        if (statusText == 'UPCOMING') const SizedBox(width: 16),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => _deletePoll(poll.id),
+                        ),
+                      ],
                     )
                   ],
                 )

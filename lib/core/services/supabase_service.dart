@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/user_model.dart';
 import '../../models/poll_model.dart';
+import 'package:flutter/foundation.dart'; // FIX: Added for debugPrint
 
 class SupabaseService {
   final SupabaseClient _client = Supabase.instance.client;
@@ -11,25 +12,38 @@ class SupabaseService {
   // AUTHENTICATION
   // ==========================================
 
-  // Get current session user ID
   String? get currentUserId => _client.auth.currentUser?.id;
 
-  // Register a new user
+  // UPDATED: Now accepts faceEmbedding for registration
   Future<AuthResponse> registerUser({
     required String email,
     required String password,
     required String fullName,
+    List<double>? faceEmbedding, 
   }) async {
-    return await _client.auth.signUp(
+    // 1. Create the Auth User
+    final authResponse = await _client.auth.signUp(
       email: email,
       password: password,
       data: {
         'full_name': fullName,
-        'role': 'user',
-        'status': 'pending', // Starts as pending admin approval 
-        'face_registered': false,
       },
     );
+
+    // 2. Insert user profile into 'users' table
+    if (authResponse.user != null) {
+      await _client.from('users').insert({
+        'id': authResponse.user!.id,
+        'email': email,
+        'name': fullName,
+        'role': 'user',
+        'status': 'pending', 
+        'face_registered': faceEmbedding != null,
+        'face_embedding': faceEmbedding, // Now saved to DB
+      });
+    }
+    
+    return authResponse;
   }
 
   // Normal Email/Password Login
@@ -79,9 +93,6 @@ class SupabaseService {
     final uid = currentUserId;
     if (uid == null) throw Exception('User not logged in');
 
-    // Because we set up a UNIQUE(poll_id, voter_id) constraint in PostgreSQL,
-    // and an AFTER INSERT trigger to update the candidate count, 
-    // this single insert handles duplicate-prevention AND counting securely! 
     await _client.from('votes').insert({
       'poll_id': pollId,
       'voter_id': uid,
@@ -94,5 +105,22 @@ class SupabaseService {
     var bytes = utf8.encode(rawCode);
     var digest = sha256.convert(bytes);
     return digest.toString();
+  }
+
+  // ==========================================
+  // AUDIT LOGGING
+  // ==========================================
+  Future<void> logAdminAction(String actionType, String description) async {
+    final uid = currentUserId;
+    if (uid == null) return;
+    try {
+      await _client.from('audit_logs').insert({
+        'admin_id': uid,
+        'action_type': actionType,
+        'description': description,
+      });
+    } catch (e) {
+      debugPrint('Audit Log Error: $e');
+    }
   }
 }

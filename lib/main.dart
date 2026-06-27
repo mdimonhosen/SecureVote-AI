@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'providers/language_provider.dart';
 
 // Core imports
 import 'core/constants/app_colors.dart';
@@ -36,22 +37,76 @@ class SecureVoteApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthStateProvider()),
         ChangeNotifierProvider(create: (_) => PollProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()), // ADDED: Language Provider
       ],
-      child: MaterialApp(
-        title: 'Secure Voting',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: AppColors.primary,
-            surface: AppColors.background,
-          ),
-          textTheme: GoogleFonts.poppinsTextTheme(
-            Theme.of(context).textTheme,
-          ),
-          scaffoldBackgroundColor: AppColors.background,
-        ),
-        // The AuthWrapper dynamically decides which screen to show
-        home: const AuthWrapper(), 
+      child: Consumer<LanguageProvider>(
+        builder: (context, langProvider, child) {
+          return MaterialApp(
+            title: 'Secure Voting',
+            debugShowCheckedModeBanner: false,
+            
+            // ADDED: Binds the app language dynamically to the provider
+            locale: langProvider.currentLocale, 
+            
+            // Automatically switch between light and dark based on the device's system settings
+            themeMode: ThemeMode.system, 
+            
+            // Light Theme Configuration
+            theme: ThemeData(
+              brightness: Brightness.light,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.primary,
+                surface: AppColors.background,
+                brightness: Brightness.light,
+              ),
+              textTheme: GoogleFonts.poppinsTextTheme(ThemeData.light().textTheme),
+              scaffoldBackgroundColor: AppColors.background,
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.textPrimary,
+                elevation: 0,
+                centerTitle: false,
+              ),
+              cardTheme: CardThemeData(
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+                color: Colors.white,
+              ),
+              inputDecorationTheme: InputDecorationTheme(
+                filled: true,
+                fillColor: Color(0xFFF5F5F5),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              ),
+            ),
+            
+            // Dark Theme Configuration
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: AppColors.primary,
+                surface: const Color(0xFF121212), // Deep dark surface
+                brightness: Brightness.dark,
+              ),
+              textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme).apply(
+                bodyColor: Colors.white70,
+                displayColor: Colors.white,
+              ),
+              scaffoldBackgroundColor: const Color(0xFF121212), // Deep dark background
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Color(0xFF1E1E1E), // Slightly elevated dark color
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+              cardColor: const Color(0xFF1E1E1E),
+            ),
+            
+            home: const AuthWrapper(), 
+          );
+        }
       ),
     );
   }
@@ -102,36 +157,41 @@ class PendingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Account Pending'),
+        title: const Text('Account Pending', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.textPrimary),
+            icon: const Icon(Icons.logout, color: Colors.white70),
             onPressed: () => Provider.of<AuthStateProvider>(context, listen: false).logout(),
           )
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.hourglass_empty, size: 80, color: AppColors.warning),
-              SizedBox(height: 24),
-              Text(
-                'Awaiting Admin Approval',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-              ),
-              SizedBox(height: 12),
-              Text(
-                'Your account has been created successfully, but an administrator must approve it before you can participate in polls.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-            ],
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(gradient: AppColors.heroGradient),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.hourglass_top_rounded, size: 90, color: Colors.white),
+                SizedBox(height: 24),
+                Text(
+                  'Awaiting Approval',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                SizedBox(height: 12),
+                Text(
+                  'Your account has been created. An administrator must approve it before you can participate in polls.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white70, height: 1.6),
+                ),
+              ],
+            ),
           ),
         ),
       ),
